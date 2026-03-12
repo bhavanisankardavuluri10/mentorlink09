@@ -17,19 +17,25 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // ✅ On app load, rehydrate user from localStorage via jwt-decode
+  // ✅ On app load, rehydrate user from localStorage
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
       try {
-        const payload = jwtDecode(token);
-        setUser({
-          id: payload.id,
-          role: payload.role,
-        });
+        const savedUser = localStorage.getItem("user");
+        if (savedUser) {
+          setUser(JSON.parse(savedUser));
+        } else {
+          const payload = jwtDecode(token);
+          setUser({
+            id: payload.id,
+            role: payload.role,
+          });
+        }
       } catch (error) {
-        console.error("Error decoding token:", error);
+        console.error("Error restoring user:", error);
         localStorage.removeItem("token");
+        localStorage.removeItem("user");
       }
     }
     setLoading(false);
@@ -37,12 +43,14 @@ export const AuthProvider = ({ children }) => {
 
   const login = (userData, token) => {
     if (token) localStorage.setItem("token", token);
+    localStorage.setItem("user", JSON.stringify(userData));
     setUser(userData);
   };
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem("token");
+    localStorage.removeItem("user");
   };
 
   const isAuthenticated = () => !!user && !!localStorage.getItem("token");

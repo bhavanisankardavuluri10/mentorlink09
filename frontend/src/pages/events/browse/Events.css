@@ -240,9 +240,9 @@
 }
 
 .location-icon {
-  width: 18px;
-  height: 18px;
-  color: #6b7280;
+  width: 20px;
+  height: 20px;
+  color: #3b82f6;
   stroke-width: 2;
   flex-shrink: 0;
 }
@@ -304,8 +304,9 @@
 
 /* Categories Section */
 .categories-section {
-  padding: 2rem 2rem 4rem;
+  padding: 1.5rem 0;
   position: relative;
+  overflow: hidden;
 }
 
 .section-title {
@@ -313,78 +314,23 @@
   font-size: 1.75rem;
   font-weight: 800;
   color: #1f2937;
-  margin-bottom: 2rem;
-}
-
-.carousel-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.carousel-btn {
-  position: absolute;
-  z-index: 10;
-  background: #ffffff;
-  padding: 0.75rem;
-  border-radius: 50%;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-}
-
-.carousel-btn-left {
-  position: absolute;
-  z-index: 10;
-  background: #ffffff;
-  padding: 0.75rem;
-  border-radius: 50%;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s;
-}
-
-.carousel-btn:hover {
-  background-color: #ffffff;
-  transform: scale(1.05);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
-}
-
-.carousel-btn.left {
-  left: -1.5rem;
-}
-
-.carousel-btn.right {
-  right: -1.5rem;
-}
-
-.carousel-btn svg {
-  width: 1.25rem;
-  height: 1.25rem;
-  color: #111827;
+  margin-bottom: 1.25rem;
+  padding: 0 2rem;
 }
 
 .categories-carousel {
-  display: flex;
-  gap: 1.5rem;
-  overflow-x: auto;
-  scroll-behavior: smooth;
-  padding: 1rem 0.5rem;
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+  overflow: hidden;
   width: 100%;
+  padding: 0.75rem 0;
+  mask-image: linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
 }
 
-.categories-carousel::-webkit-scrollbar {
-  display: none;
+.marquee-track {
+  display: flex;
+  gap: 2rem;
+  width: max-content;
+  will-change: transform;
 }
 
 .category-card {
@@ -392,41 +338,27 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  text-align: center;
+  gap: 0.5rem;
   cursor: pointer;
-  width: 9rem;
-  padding: 1rem 0.75rem;
-  border-radius: 16px;
-  transition: all 0.2s ease;
-  border: 1px solid transparent;
+  padding: 0.5rem;
   background: transparent;
-}
-
-.category-card:hover {
-  background-color: #ffffff;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  border-color: #e5e7eb;
-}
-
-.category-card.active {
-  background-color: #ffffff;
-  border: 1px solid #3b82f6;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+  border: none;
 }
 
 .category-image {
-  width: 6.5rem;
-  height: 6.5rem;
+  width: 7rem;
+  height: 7rem;
   border-radius: 50%;
   overflow: hidden;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  transition: transform 0.2s ease;
-  margin-bottom: 0.75rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
   background: #eee;
+  border: 3px solid transparent;
+  will-change: transform;
 }
 
-.category-card:hover .category-image {
-  transform: translateY(-3px);
+.category-card.active .category-image {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15), 0 4px 15px rgba(59, 130, 246, 0.25);
 }
 
 .category-image img {
@@ -435,23 +367,13 @@
   object-fit: cover;
 }
 
-.category-card h3 {
-  margin: 0;
+.category-label {
   font-family: 'Montserrat', sans-serif;
+  font-size: 0.8rem;
   font-weight: 600;
-  font-size: 0.9rem;
-  color: #1f2937;
-  transition: color 0.2s;
-}
-
-.category-card:hover h3 {
-  color: #111827;
-  font-weight: 700;
-}
-
-.category-card.active h3 {
-  color: #2563eb;
-  font-weight: 700;
+  color: #374151;
+  text-align: center;
+  white-space: nowrap;
 }
 
 /* Events Section */
@@ -485,6 +407,7 @@
   white-space: nowrap;
   font-size: 0.9rem;
   font-weight: 500;
+  flex-shrink: 0;
 }
 
 .filter-btn:hover {
@@ -834,7 +757,7 @@
   }
 
   .categories-section {
-    padding: 2rem 1rem;
+    padding: 1.5rem 0;
   }
 
   .events-section {
@@ -925,25 +848,20 @@
   }
 
   .categories-section {
-    padding: 2rem 0;
+    padding: 1.25rem 0;
   }
 
-  .categories-carousel {
-    gap: 0.75rem;
+  .marquee-track {
+    gap: 1.5rem;
   }
 
-  .category-card {
-    min-width: 120px;
-    padding: 0.75rem 1rem;
+  .category-image {
+    width: 5.5rem;
+    height: 5.5rem;
   }
 
-  .category-icon {
-    font-size: 1.5rem;
-    margin-bottom: 0.5rem;
-  }
-
-  .category-name {
-    font-size: 0.875rem;
+  .category-label {
+    font-size: 0.75rem;
   }
 
   .events-grid {
@@ -953,10 +871,6 @@
 
   .event-card {
     max-width: 100%;
-  }
-
-  .carousel-btn {
-    display: none;
   }
 
   .section-title {
@@ -1029,7 +943,9 @@
 
   .filters-container {
     gap: 0.5rem;
-    padding-bottom: 0.25rem;
+    padding-bottom: 0.5rem;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
   }
 
   .filter-btn {
@@ -1037,23 +953,21 @@
     font-size: 0.8rem;
   }
 
-  .category-card {
-    min-width: 90px;
-    width: 90px;
-    padding: 0.5rem 0.625rem;
-  }
-
   .category-image {
-    width: 5rem;
-    height: 5rem;
+    width: 4.5rem;
+    height: 4.5rem;
   }
 
-  .category-card h3 {
-    font-size: 0.75rem;
+  .marquee-track {
+    gap: 1.25rem;
+  }
+
+  .category-label {
+    font-size: 0.7rem;
   }
 
   .categories-section {
-    padding: 1.5rem 0.5rem;
+    padding: 1rem 0;
   }
 
   .section-title {
@@ -1170,8 +1084,12 @@ body.dark-mode .location-button {
   border-color: #2d2d2d;
 }
 
+body.dark-mode .location-icon {
+  color: #60a5fa;
+}
+
 body.dark-mode .location-selector {
-  border-left-color: #2d2d2d;
+  border-color: #2d2d2d;
 }
 
 body.dark-mode .location-dropdown {
@@ -1190,6 +1108,24 @@ body.dark-mode .location-item:hover {
 
 body.dark-mode .search-btn {
   background: #10b981;
+}
+
+body.dark-mode .filter-btn {
+  background-color: #1f2937;
+  border-color: #374151;
+  color: #d1d5db;
+}
+
+body.dark-mode .filter-btn:hover {
+  background-color: #374151;
+  border-color: #4b5563;
+  color: #f9fafb;
+}
+
+body.dark-mode .filter-btn.active {
+  background-color: #1e3a5f;
+  border-color: #3b82f6;
+  color: #60a5fa;
 }
 
 body.dark-mode .filters-bar {
@@ -1218,17 +1154,17 @@ body.dark-mode .section-title {
   color: #e5e7eb;
 }
 
-body.dark-mode .category-card {
-  background: #1a1a1a;
-  border-color: #2d2d2d;
-  color: #e5e7eb;
+body.dark-mode .category-label {
+  color: #9ca3af;
 }
 
-body.dark-mode .category-card:hover,
-body.dark-mode .category-card.active {
-  background: #10b981;
-  border-color: #10b981;
-  color: white;
+body.dark-mode .category-card.active .category-label {
+  color: #60a5fa;
+}
+
+body.dark-mode .category-card.active .category-image {
+  border-color: #60a5fa;
+  box-shadow: 0 0 0 4px rgba(96, 165, 250, 0.15), 0 4px 15px rgba(96, 165, 250, 0.25);
 }
 
 body.dark-mode .event-card {
@@ -1276,15 +1212,6 @@ body.dark-mode .cta-btn:hover {
   background: #2563eb;
 }
 
-body.dark-mode .category-name,
-body.dark-mode .category-card h3 {
-  color: #e5e7eb;
-}
-
-body.dark-mode .category-card.active .category-name,
-body.dark-mode .category-card.active h3 {
-  color: #ffffff;
-}
 
 body.dark-mode .spinner-dot {
   background-color: #64748b;
@@ -1359,39 +1286,6 @@ body.dark-mode .spinner-dot:nth-child(3) {
 .search-box:focus-within {
   border-color: rgba(0, 0, 0, 0.15);
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
-}
-
-.carousel-btn {
-  position: absolute;
-  top: 50%;
-  /* 👈 REQUIRED */
-  transform: translateY(-50%);
-  /* 👈 REQUIRED */
-  z-index: 10;
-
-  background: #ffffff;
-  padding: 0.75rem;
-  border-radius: 50%;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(0, 0, 0, 0.05);
-  cursor: pointer;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.carousel-btn.left {
-  left: -1.5rem;
-}
-
-.carousel-btn.right {
-  right: -1.5rem;
-}
-
-.carousel-wrapper {
-  position: relative;
-  /* 👈 REQUIRED */
 }
 
 /* Event Card Skeleton Loading */

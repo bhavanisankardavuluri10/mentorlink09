@@ -55,7 +55,8 @@ const Navbar = () => {
       <div className="navbar-container">
         {/* Logo Section */}
         <div className="navbar-logo" onClick={() => navigate("/home")}>
-          <img src={logoImage} alt="MentorLink Logo" className="logo-image" />
+          <img src={logoImage} alt="MentorLink" className="logo-icon" />
+          <span className="logo-text">MentorLink</span>
         </div>
 
         {/* Mobile Menu Toggle */}
@@ -76,15 +77,26 @@ const Navbar = () => {
             <a href="#contact" className="nav-link" onClick={() => handleNavClick('#contact')}>Contact</a>
           </div>
 
-          <button
-            className="get-started-btn"
-            onClick={() => {
-              setMobileMenuOpen(false);
-              navigate("/signup");
-            }}
-          >
-            Get Started
-          </button>
+          <div className="navbar-auth-buttons">
+            <button
+              className="get-started-btn"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                navigate("/signup");
+              }}
+            >
+              Get Started
+            </button>
+            <button
+              className="login-btn"
+              onClick={() => {
+                setMobileMenuOpen(false);
+                navigate("/login");
+              }}
+            >
+              Login
+            </button>
+          </div>
 
           {/* Dark Mode Toggle */}
           <button

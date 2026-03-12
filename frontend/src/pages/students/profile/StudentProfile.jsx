@@ -5,11 +5,12 @@ import HomeNavbar from '../../../components/layout/home-navbar/HomeNavbar';
 import Sidebar from '../../../components/layout/sidebar/Sidebar';
 import SessionHistory from '../../../components/chat/SessionHistory';
 import Footer from '../../../components/layout/footer/Footer';
-import { studentAPI, connectionAPI, userAPI } from '../../../services/api';
+import { studentAPI, connectionAPI, userAPI, mentorAPI } from '../../../services/api';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useLayout } from '../../../contexts/LayoutContext';
 import PageSkeleton from '../../../components/ui/page-skeleton/PageSkeleton';
 import UserListModal from '../../../components/ui/user-list-modal/UserListModal';
+import { FaUserFriends } from 'react-icons/fa';
 import './StudentProfile.css';
 
 const StudentProfile = () => {
@@ -41,6 +42,10 @@ const StudentProfile = () => {
   const [loadingRequests, setLoadingRequests] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [selectedMentor, setSelectedMentor] = useState(null);
+
+  // Sidebar states
+  const [connections, setConnections] = useState([]);
+  const [suggestedMentors, setSuggestedMentors] = useState([]);
 
   // Profile picture upload states
   const [, setUploadingImage] = useState(false);
@@ -178,6 +183,42 @@ const StudentProfile = () => {
 
     fetchMyMentors();
   }, [isOwnProfile]);
+
+  // Fetch sidebar data: connections + suggested mentors
+  useEffect(() => {
+    if (!isOwnProfile || !student) return;
+
+    const fetchSidebarData = async () => {
+      try {
+        const connRes = await connectionAPI.getConnections();
+        const conns = connRes.connections || [];
+        setConnections(conns);
+
+        const mentorRes = await mentorAPI.getAllMentors();
+        const allMentors = mentorRes.mentors || [];
+
+        const studentFields = (student.mentorshipField || []).map(f => f.toLowerCase());
+        const connectedUserIds = conns.map(c => c._id || c.user?._id);
+
+        const suggested = allMentors.filter(m => {
+          if (m.user?._id === user?._id) return false;
+          if (connectedUserIds.includes(m.user?._id)) return false;
+          const primary = (m.primaryDomain || '').toLowerCase();
+          const secondary = (m.secondaryDomain || '').toLowerCase();
+          return studentFields.some(field =>
+            primary.includes(field) || field.includes(primary) ||
+            secondary.includes(field) || field.includes(secondary)
+          );
+        }).slice(0, 5);
+
+        setSuggestedMentors(suggested);
+      } catch (err) {
+        console.error('Error fetching sidebar data:', err);
+      }
+    };
+
+    fetchSidebarData();
+  }, [isOwnProfile, student, user]);
 
   const handleConnect = async () => {
     if (!isAuthenticated()) {
@@ -388,6 +429,8 @@ const StudentProfile = () => {
 
         {/* Main Content Area - Anchored Single Surface */}
         <main className="student-profile-main">
+          <div className={`profile-layout-grid${isOwnProfile ? ' has-sidebar' : ''}`}>
+            <div className="profile-main-column">
 
           {/* Header Section: Banner + Profile Info */}
           <header className="profile-header-section">
@@ -438,12 +481,20 @@ const StudentProfile = () => {
                 <h1 className="student-name-large">{student.user?.name || 'Student'}</h1>
                 <p className="student-headline">{student.roleStatus || 'Student'} · {student.experienceLevel || 'Beginner'}</p>
                 {student.user?.location && <p className="student-location">{student.user.location}</p>}
-                <p
-                  className="connections-text connections-clickable"
-                  onClick={() => setModalOpen(true)}
-                >
-                  {connectionsCount} connections
-                </p>
+                <div className="student-stats-section">
+                  <div
+                    className="student-stat-item stat-clickable"
+                    onClick={() => setModalOpen(true)}
+                  >
+                    <div className="student-stat-icon">
+                      <FaUserFriends />
+                    </div>
+                    <div className="student-stat-content">
+                      <span className="student-stat-value">{connectionsCount}</span>
+                      <span className="student-stat-label">Connections</span>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <div className="profile-header-actions">
@@ -620,6 +671,82 @@ const StudentProfile = () => {
               )}
             </section>
           )}
+
+            </div>{/* end profile-main-column */}
+
+            {/* Right Sidebar - Connections & Suggestions */}
+            {isOwnProfile && (
+              <aside className="profile-sidebar-column">
+                <div className="profile-sidebar-sticky">
+                  {/* Your Connections Card */}
+                  <div className="sidebar-card">
+                    <h3 className="sidebar-card-title">
+                      <FaUserFriends />
+                      Your Connections
+                      <span className="sidebar-card-count">{connections.length}</span>
+                    </h3>
+                    {connections.length === 0 ? (
+                      <p className="sidebar-empty-text">No connections yet</p>
+                    ) : (
+                      <div className="sidebar-connections-list">
+                        {connections.slice(0, 8).map((conn) => (
+                          <div
+                            key={conn._id}
+                            className="sidebar-connection-item"
+                            onClick={() => navigate(`/profile/${conn._id}`)}
+                          >
+                            <img
+                              src={conn.profileImage || 'https://cdn-icons-png.flaticon.com/512/3177/3177440.png'}
+                              alt={conn.name}
+                              className="sidebar-avatar"
+                            />
+                            <div className="sidebar-connection-info">
+                              <span className="sidebar-connection-name">{conn.name}</span>
+                              <span className="sidebar-connection-role">{conn.role || 'User'}</span>
+                            </div>
+                          </div>
+                        ))}
+                        {connections.length > 8 && (
+                          <button className="sidebar-see-all" onClick={() => setModalOpen(true)}>
+                            See all connections
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Suggested Mentors Card */}
+                  <div className="sidebar-card">
+                    <h3 className="sidebar-card-title">Suggested Mentors</h3>
+                    {suggestedMentors.length === 0 ? (
+                      <p className="sidebar-empty-text">No suggestions available</p>
+                    ) : (
+                      <div className="sidebar-connections-list">
+                        {suggestedMentors.map((mentor) => (
+                          <div
+                            key={mentor._id}
+                            className="sidebar-connection-item"
+                            onClick={() => navigate(`/mentors/${mentor._id}`)}
+                          >
+                            <img
+                              src={mentor.user?.profileImage || 'https://cdn-icons-png.flaticon.com/512/3177/3177440.png'}
+                              alt={mentor.user?.name}
+                              className="sidebar-avatar"
+                            />
+                            <div className="sidebar-connection-info">
+                              <span className="sidebar-connection-name">{mentor.user?.name}</span>
+                              <span className="sidebar-connection-role">{mentor.primaryDomain || mentor.role || 'Mentor'}</span>
+                            </div>
+                            <span className="sidebar-match-badge">Match</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </aside>
+            )}
+          </div>{/* end profile-layout-grid */}
 
           <Footer />
         </main>

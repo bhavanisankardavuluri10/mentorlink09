@@ -11,6 +11,16 @@
   --accent-hover: #004182;
 }
 
+/* ==================== Dark Mode Variable Overrides ==================== */
+body.dark-mode {
+  --bg: #111827;
+  --surface: #1f2937;
+  --text-primary: #f9fafb;
+  --text-secondary: #9ca3af;
+  --text-muted: rgba(255, 255, 255, 0.6);
+  --border: #374151;
+}
+
 .student-profile-page {
   min-height: 100vh;
   background: var(--bg);
@@ -29,6 +39,167 @@
   background: var(--surface);
   min-height: 100%;
   padding-bottom: 2rem;
+}
+
+/* ==================== 2-Column Profile Layout ==================== */
+.profile-layout-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.profile-layout-grid.has-sidebar {
+  grid-template-columns: 1fr 340px;
+  padding: 0 1.25rem;
+}
+
+.profile-main-column {
+  min-width: 0;
+}
+
+/* ==================== Right Sidebar ==================== */
+.profile-sidebar-column {
+  min-width: 0;
+}
+
+.profile-sidebar-sticky {
+  position: sticky;
+  top: 90px;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+}
+
+.profile-sidebar-sticky:hover {
+  scrollbar-color: var(--border) transparent;
+}
+
+.sidebar-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem;
+  transition: box-shadow 0.2s;
+}
+
+.sidebar-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.sidebar-card-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sidebar-card-count {
+  background: rgba(10, 102, 194, 0.1);
+  color: var(--accent);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  margin-left: auto;
+}
+
+.sidebar-empty-text {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  text-align: center;
+  padding: 1rem 0;
+  margin: 0;
+}
+
+.sidebar-connections-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.sidebar-connection-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.4rem 0.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.sidebar-connection-item:hover {
+  background: var(--bg);
+}
+
+.sidebar-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.sidebar-connection-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.sidebar-connection-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-connection-role {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sidebar-match-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #ff914d;
+  background: rgba(255, 145, 77, 0.12);
+  padding: 2px 8px;
+  border-radius: 8px;
+  flex-shrink: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sidebar-see-all {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.5rem 0;
+  text-align: center;
+  width: 100%;
+  transition: color 0.15s;
+}
+
+.sidebar-see-all:hover {
+  color: var(--accent-hover);
+  text-decoration: underline;
 }
 
 /* Header Section (Banner + Profile Info) */
@@ -180,11 +351,70 @@
   margin: 0 0 0.25rem;
 }
 
-.connections-text {
-  font-size: 0.8rem;
-  color: var(--accent);
-  font-weight: 600;
-  margin: 0;
+/* Student Stats Section */
+.student-stats-section {
+  display: flex;
+  gap: 24px;
+  margin-top: 0.5rem;
+}
+
+.student-stat-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.student-stat-item:hover {
+  transform: translateY(-2px);
+}
+
+.stat-clickable:hover .student-stat-value {
+  color: #3b82f6;
+  text-decoration: underline;
+}
+
+.student-stat-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.student-stat-icon svg {
+  font-size: 22px;
+  width: 22px;
+  height: 22px;
+}
+
+.student-stat-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.student-stat-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.student-stat-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-secondary);
+}
+
+body.dark-mode .student-stat-icon {
+  background: rgba(96, 165, 250, 0.15);
+  color: #60a5fa;
 }
 
 .profile-header-actions {
@@ -608,7 +838,20 @@
   .student-profile-main {
     margin-left: 0;
     padding: 0;
-    /* Remove padding entirely on mobile for edge-to-edge? or keep subtle? LinkedIn mobile is edge to edge. */
+  }
+
+  .profile-layout-grid.has-sidebar {
+    grid-template-columns: 1fr;
+    padding: 0;
+  }
+
+  .profile-sidebar-column {
+    padding: 0 1rem;
+  }
+
+  .profile-sidebar-sticky {
+    position: static;
+    max-height: none;
   }
 }
 
@@ -927,16 +1170,6 @@ body.dark-mode .mentorship-type-tag {
   border-color: #475569;
 }
 
-/* Connections count clickable */
-.connections-clickable {
-  cursor: pointer;
-  transition: color 0.15s;
-}
-
-.connections-clickable:hover {
-  color: #3b82f6;
-  text-decoration: underline;
-}
 
 /* Issue 4: Communication frequency / details grid dark mode */
 body.dark-mode .detail-label {
@@ -971,5 +1204,49 @@ body.dark-mode .mentor-name {
 }
 
 body.dark-mode .mentor-role {
+  color: #94a3b8;
+}
+
+/* ==================== Sidebar Dark Mode ==================== */
+body.dark-mode .sidebar-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+body.dark-mode .sidebar-card:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+body.dark-mode .sidebar-card-title {
+  color: #f1f5f9;
+}
+
+body.dark-mode .sidebar-card-count {
+  background: rgba(96, 165, 250, 0.15);
+  color: #60a5fa;
+}
+
+body.dark-mode .sidebar-connection-item:hover {
+  background: #0f172a;
+}
+
+body.dark-mode .sidebar-connection-name {
+  color: #f1f5f9;
+}
+
+body.dark-mode .sidebar-connection-role {
+  color: #94a3b8;
+}
+
+body.dark-mode .sidebar-match-badge {
+  color: #ff914d;
+  background: rgba(255, 145, 77, 0.15);
+}
+
+body.dark-mode .sidebar-see-all {
+  color: #60a5fa;
+}
+
+body.dark-mode .sidebar-empty-text {
   color: #94a3b8;
 }

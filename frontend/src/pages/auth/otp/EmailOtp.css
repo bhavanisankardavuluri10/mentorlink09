@@ -140,17 +140,35 @@
    LOGO
    ============================================ */
 .otp-logo-container {
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
   margin-bottom: 1.75rem;
   animation: otp-fadeInUp 0.8s ease-out 0.2s backwards;
 }
 
 .otp-logo {
-  width: 180px;
-  height: auto;
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  border-radius: 10px;
   filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.1));
-  display: block;
-  margin: 0 auto;
+}
+
+.otp-logo-text {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1f2937;
+  letter-spacing: -0.02em;
+}
+
+body.dark-mode .otp-logo {
+  filter: brightness(1.2) contrast(1.1);
+}
+
+body.dark-mode .otp-logo-text {
+  color: #f1f5f9;
 }
 
 /* ============================================
@@ -498,7 +516,8 @@
   }
 
   .otp-logo {
-    width: 150px;
+    width: 40px;
+    height: 40px;
   }
 
   .otp-circle-1,

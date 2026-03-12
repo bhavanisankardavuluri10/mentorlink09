@@ -74,7 +74,7 @@ const getMentorProfile = async (req, res) => {
   try {
     const userId = req.user._id;
 
-    const mentor = await Mentor.findOne({ user: userId }).populate('user', 'name email bio profileImage location about connectionsCount');
+    const mentor = await Mentor.findOne({ user: userId }).populate('user', 'name email bio profileImage location about connectionsCount followersCount');
     if (!mentor) {
       return res.status(404).json({ message: 'Mentor profile not found' });
     }
@@ -90,7 +90,7 @@ const getMentorProfile = async (req, res) => {
 const getAllMentors = async (req, res) => {
   try {
     const mentors = await Mentor.find()
-      .populate('user', 'name email bio profileImage location about connectionsCount')
+      .populate('user', 'name email bio profileImage location about connectionsCount followersCount')
       .sort({ createdAt: -1 });
 
     res.json({ mentors });
@@ -108,7 +108,7 @@ const getMentorById = async (req, res) => {
     const { id } = req.params;
 
     const mentor = await Mentor.findById(id)
-      .populate('user', 'name email bio profileImage location about connectionsCount');
+      .populate('user', 'name email bio profileImage location about connectionsCount followersCount');
 
     if (!mentor) {
       return res.status(404).json({ message: 'Mentor not found' });

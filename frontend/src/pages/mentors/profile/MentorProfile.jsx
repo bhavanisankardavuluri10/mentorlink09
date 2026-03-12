@@ -59,6 +59,7 @@ import DevicesIcon from '@mui/icons-material/Devices';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import WorkHistoryIcon from '@mui/icons-material/WorkHistory';
+import { FaUserFriends, FaLink } from 'react-icons/fa';
 
 const MentorProfile = () => {
   const { id } = useParams();
@@ -112,6 +113,11 @@ const MentorProfile = () => {
   const [showScheduleModal, setShowScheduleModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
   const [selectedMentee, setSelectedMentee] = useState(null);
+
+  // Sidebar states
+  const [connections, setConnections] = useState([]);
+  const [suggestedMentors, setSuggestedMentors] = useState([]);
+  const [upcomingEvents, setUpcomingEvents] = useState([]);
 
   // Profile picture upload states
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -339,6 +345,57 @@ const MentorProfile = () => {
 
     fetchActiveMentees();
   }, [isOwnProfile]);
+
+  // Fetch sidebar data: connections, suggested mentors, upcoming events
+  useEffect(() => {
+    if (!isOwnProfile || !mentor) return;
+
+    const fetchSidebarData = async () => {
+      try {
+        const connRes = await connectionAPI.getConnections();
+        const conns = connRes.connections || [];
+        setConnections(conns);
+
+        const mentorRes = await mentorAPI.getAllMentors();
+        const allMentors = mentorRes.mentors || [];
+        const connectedUserIds = conns.map(c => c._id || c.user?._id);
+
+        const myDomains = [mentor.primaryDomain, mentor.secondaryDomain]
+          .filter(Boolean).map(d => d.toLowerCase());
+        const myRole = (mentor.role || '').toLowerCase();
+
+        const suggested = allMentors.filter(m => {
+          if (m.user?._id === user?._id) return false;
+          if (connectedUserIds.includes(m.user?._id)) return false;
+          const primary = (m.primaryDomain || '').toLowerCase();
+          const secondary = (m.secondaryDomain || '').toLowerCase();
+          const role = (m.role || '').toLowerCase();
+          const domainMatch = myDomains.some(d =>
+            primary.includes(d) || d.includes(primary) ||
+            secondary.includes(d) || d.includes(secondary)
+          );
+          const roleMatch = myRole && role && (
+            role.includes(myRole) || myRole.includes(role)
+          );
+          return domainMatch || roleMatch;
+        }).slice(0, 5);
+
+        setSuggestedMentors(suggested);
+
+        const eventsRes = await userAPI.getEvents();
+        const now = new Date();
+        const upcoming = (eventsRes.events || [])
+          .filter(e => new Date(e.startDate) > now)
+          .sort((a, b) => new Date(a.startDate) - new Date(b.startDate))
+          .slice(0, 4);
+        setUpcomingEvents(upcoming);
+      } catch (err) {
+        console.error('Error fetching sidebar data:', err);
+      }
+    };
+
+    fetchSidebarData();
+  }, [isOwnProfile, mentor, user]);
 
   const handleFollow = async () => {
     if (!isAuthenticated()) {
@@ -764,6 +821,8 @@ const MentorProfile = () => {
       <div className={`app-container${sidebarCollapsed ? ' sidebar-collapsed' : ''}`}>
         <Sidebar />
         <main className="mentor-profile-main">
+          <div className={`profile-layout-grid${isOwnProfile ? ' has-sidebar' : ''}`}>
+            <div className="profile-main-column">
           {/* Profile Header Section */}
           <header className="profile-header-section">
             {/* Profile Header Card */}
@@ -859,13 +918,17 @@ const MentorProfile = () => {
                             setModalOpen(true);
                           }}
                         >
-                          <PeopleIcon className="metric-icon" />
+                          <div className="metric-icon metric-icon--followers">
+                            <FaUserFriends />
+                          </div>
                           <div className="metric-content">
                             <span className="metric-value">{followersCount}</span>
                             <span className="metric-label">Followers</span>
                           </div>
                         </div>
                       </Tooltip>
+
+                      <div className="metric-divider" />
 
                       <Tooltip title="View Connections" arrow>
                         <div
@@ -876,7 +939,9 @@ const MentorProfile = () => {
                             setModalOpen(true);
                           }}
                         >
-                          <GroupsIcon className="metric-icon" />
+                          <div className="metric-icon metric-icon--connections">
+                            <FaLink />
+                          </div>
                           <div className="metric-content">
                             <span className="metric-value">{connectionsCount}</span>
                             <span className="metric-label">Connections</span>
@@ -1487,6 +1552,117 @@ const MentorProfile = () => {
               )}
             </>
           )}
+            </div>{/* end profile-main-column */}
+
+            {/* Right Sidebar - Connections, Suggestions & Events */}
+            {isOwnProfile && (
+              <aside className="profile-sidebar-column">
+                <div className="profile-sidebar-sticky">
+                  {/* Your Connections Card */}
+                  <div className="sidebar-card">
+                    <h3 className="sidebar-card-title">
+                      <FaUserFriends />
+                      Your Connections
+                      <span className="sidebar-card-count">{connections.length}</span>
+                    </h3>
+                    {connections.length === 0 ? (
+                      <p className="sidebar-empty-text">No connections yet</p>
+                    ) : (
+                      <div className="sidebar-connections-list">
+                        {connections.slice(0, 8).map((conn) => (
+                          <div
+                            key={conn._id}
+                            className="sidebar-connection-item"
+                            onClick={() => navigate(`/profile/${conn._id}`)}
+                          >
+                            <img
+                              src={conn.profileImage || 'https://cdn-icons-png.flaticon.com/512/3177/3177440.png'}
+                              alt={conn.name}
+                              className="sidebar-avatar"
+                            />
+                            <div className="sidebar-connection-info">
+                              <span className="sidebar-connection-name">{conn.name}</span>
+                              <span className="sidebar-connection-role">{conn.role || 'User'}</span>
+                            </div>
+                          </div>
+                        ))}
+                        {connections.length > 8 && (
+                          <button className="sidebar-see-all" onClick={() => {
+                            setModalTitle('Connections');
+                            setModalFetch(() => () => connectionAPI.getConnections().then(r => r.connections || []));
+                            setModalOpen(true);
+                          }}>
+                            See all connections
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Suggested Mentors Card */}
+                  <div className="sidebar-card">
+                    <h3 className="sidebar-card-title">Suggested Mentors</h3>
+                    {suggestedMentors.length === 0 ? (
+                      <p className="sidebar-empty-text">No suggestions available</p>
+                    ) : (
+                      <div className="sidebar-connections-list">
+                        {suggestedMentors.map((m) => (
+                          <div
+                            key={m._id}
+                            className="sidebar-connection-item"
+                            onClick={() => navigate(`/mentors/${m._id}`)}
+                          >
+                            <img
+                              src={m.user?.profileImage || 'https://cdn-icons-png.flaticon.com/512/3177/3177440.png'}
+                              alt={m.user?.name}
+                              className="sidebar-avatar"
+                            />
+                            <div className="sidebar-connection-info">
+                              <span className="sidebar-connection-name">{m.user?.name}</span>
+                              <span className="sidebar-connection-role">{m.primaryDomain || m.role || 'Mentor'}</span>
+                            </div>
+                            <span className="sidebar-match-badge">Match</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Upcoming Events Card */}
+                  <div className="sidebar-card">
+                    <h3 className="sidebar-card-title">Upcoming Events</h3>
+                    {upcomingEvents.length === 0 ? (
+                      <p className="sidebar-empty-text">No upcoming events</p>
+                    ) : (
+                      <div className="sidebar-connections-list">
+                        {upcomingEvents.map((event) => (
+                          <div
+                            key={event._id}
+                            className="sidebar-connection-item"
+                            onClick={() => navigate(`/events/${event._id}`)}
+                          >
+                            <div className="sidebar-event-date">
+                              <span className="sidebar-event-month">
+                                {new Date(event.startDate).toLocaleString('default', { month: 'short' })}
+                              </span>
+                              <span className="sidebar-event-day">
+                                {new Date(event.startDate).getDate()}
+                              </span>
+                            </div>
+                            <div className="sidebar-connection-info">
+                              <span className="sidebar-connection-name">{event.eventName}</span>
+                              <span className="sidebar-connection-role">{event.eventType} · {event.eventMode}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </aside>
+            )}
+          </div>{/* end profile-layout-grid */}
+
           <Footer />
         </main>
       </div>

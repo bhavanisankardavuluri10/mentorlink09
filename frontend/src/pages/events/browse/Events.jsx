@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import gsap from "gsap";
 import HomeNavbar from "../../../components/layout/home-navbar/HomeNavbar";
 import Sidebar from "../../../components/layout/sidebar/Sidebar";
 import Footer from "../../../components/layout/footer/Footer";
@@ -29,6 +30,9 @@ const Events = () => {
 
   const locationDropdownRef = useRef(null);
   const categoriesCarouselRef = useRef(null);
+  const categoriesSectionRef = useRef(null);
+  const categoryCardsRef = useRef([]);
+  const marqueeAnim = useRef(null);
   const EVENTS_PER_PAGE = 6;
 
   const categories = [
@@ -105,6 +109,87 @@ const Events = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // GSAP Categories Animations
+  useEffect(() => {
+    const section = categoriesSectionRef.current;
+    const cards = categoryCardsRef.current.filter(Boolean);
+    if (!section || cards.length === 0) return;
+
+    // Entrance animation — staggered fade-in from below
+    gsap.fromTo(
+      cards,
+      { opacity: 0, y: 40, scale: 0.85 },
+      {
+        opacity: 1,
+        y: 0,
+        scale: 1,
+        duration: 0.5,
+        stagger: 0.08,
+        ease: "back.out(1.4)",
+        delay: 0.2,
+      }
+    );
+
+    // Infinite marquee scroll
+    const carousel = categoriesCarouselRef.current;
+    if (!carousel) return;
+
+    const setupMarquee = () => {
+      const track = carousel.querySelector(".marquee-track");
+      if (!track) return;
+
+      // Kill previous animation
+      if (marqueeAnim.current) marqueeAnim.current.kill();
+
+      const trackWidth = track.scrollWidth / 2; // half because content is duplicated
+
+      gsap.set(track, { x: 0 });
+      marqueeAnim.current = gsap.to(track, {
+        x: -trackWidth,
+        duration: 20,
+        ease: "none",
+        repeat: -1,
+      });
+
+      // Pause/resume on hover and touch
+      carousel.addEventListener("mouseenter", () => marqueeAnim.current?.pause());
+      carousel.addEventListener("mouseleave", () => marqueeAnim.current?.resume());
+      carousel.addEventListener("touchstart", () => marqueeAnim.current?.pause(), { passive: true });
+      carousel.addEventListener("touchend", () => marqueeAnim.current?.resume());
+    };
+
+    // Small delay to let DOM render the duplicated items
+    const timer = setTimeout(setupMarquee, 100);
+
+    return () => {
+      clearTimeout(timer);
+      if (marqueeAnim.current) marqueeAnim.current.kill();
+    };
+  }, []);
+
+  // Category click with GSAP pulse
+  const handleCategoryClick = useCallback((catName, cardEl) => {
+    setActiveCategory(catName);
+    if (cardEl) {
+      gsap.fromTo(
+        cardEl.querySelector(".category-image"),
+        { scale: 1 },
+        { scale: 1.2, duration: 0.15, yoyo: true, repeat: 1, ease: "power2.out" }
+      );
+    }
+  }, []);
+
+  // Hover animations
+  const handleCardHover = useCallback((cardEl, isEnter) => {
+    if (!cardEl) return;
+    const img = cardEl.querySelector(".category-image");
+    if (isEnter) {
+      gsap.to(img, { scale: 1.12, y: -6, duration: 0.3, ease: "power2.out" });
+    } else {
+      gsap.to(img, { scale: 1, y: 0, duration: 0.3, ease: "power2.out" });
+    }
+  }, []);
+
   // Filter events
   const getFilteredEvents = (events) => {
     const today = new Date();
@@ -164,16 +249,6 @@ const Events = () => {
       else newSet.add(eventId);
       return newSet;
     });
-  };
-
-  const scrollCarousel = (direction) => {
-    if (categoriesCarouselRef.current) {
-      const scrollAmount = 300;
-      categoriesCarouselRef.current.scrollBy({
-        left: direction === "left" ? -scrollAmount : scrollAmount,
-        behavior: "smooth",
-      });
-    }
   };
 
   return (
@@ -242,33 +317,26 @@ const Events = () => {
           </section>
 
           {/* Categories Section */}
-          <section className="categories-section">
+          <section className="categories-section" ref={categoriesSectionRef}>
             <h2 className="section-title">Explore Categories</h2>
-            <div className="carousel-wrapper">
-              <button className="carousel-btn left" onClick={() => scrollCarousel("left")}>
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" />
-                </svg>
-              </button>
-              <div className="categories-carousel" ref={categoriesCarouselRef}>
-                {categories.map((cat) => (
+            <div className="categories-carousel" ref={categoriesCarouselRef}>
+              <div className="marquee-track">
+                {[...categories, ...categories].map((cat, idx) => (
                   <div
-                    key={cat.name}
+                    key={`${cat.name}-${idx}`}
+                    ref={(el) => { if (idx < categories.length) categoryCardsRef.current[idx] = el; }}
                     className={`category-card ${activeCategory === cat.name ? "active" : ""}`}
-                    onClick={() => setActiveCategory(cat.name)}
+                    onClick={(e) => handleCategoryClick(cat.name, e.currentTarget)}
+                    onMouseEnter={(e) => handleCardHover(e.currentTarget, true)}
+                    onMouseLeave={(e) => handleCardHover(e.currentTarget, false)}
                   >
                     <div className="category-image">
                       <img src={cat.imageUrl} alt={cat.name} />
                     </div>
-                    <h3>{cat.name}</h3>
+                    <span className="category-label">{cat.name}</span>
                   </div>
                 ))}
               </div>
-              <button className="carousel-btn right" onClick={() => scrollCarousel("right")}>
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                </svg>
-              </button>
             </div>
           </section>
 

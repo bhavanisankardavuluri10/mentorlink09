@@ -127,7 +127,8 @@ const EmailOtp = () => {
 
       <div className="otp-container">
         <div className="otp-logo-container">
-          <img src={logoImage} alt="MentorLink Logo" className="otp-logo" />
+          <img src={logoImage} alt="MentorLink" className="otp-logo" />
+          <span className="otp-logo-text">MentorLink</span>
         </div>
 
         <div className="otp-header">

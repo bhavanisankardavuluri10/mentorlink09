@@ -45,7 +45,10 @@ const PhoneVerification = () => {
 
         {/* Right Side */}
         <div className="form-section">
-          <img src={logo} alt="MentorLink Logo" className="login-logo" />
+          <div className="login-logo-brand">
+            <img src={logo} alt="MentorLink" className="login-logo" />
+            <span className="login-logo-text">MentorLink</span>
+          </div>
 
           <h2 className="welcome-text">Enter your phone number</h2>
           <p className="welcome-subtext">

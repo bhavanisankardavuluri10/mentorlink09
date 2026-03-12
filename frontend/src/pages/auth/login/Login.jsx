@@ -41,8 +41,12 @@ const Login = () => {
 
       localStorage.setItem("token", token);
 
-      const payload = jwtDecode(token);
-      const userData = { id: payload.id, role: payload.role };
+      const userData = data.user || {};
+      if (!userData.id) {
+        const payload = jwtDecode(token);
+        userData.id = payload.id;
+        userData.role = payload.role;
+      }
       login(userData, token);
 
       setShowSuccess(false);
@@ -76,7 +80,10 @@ const Login = () => {
 
           {/* Login Form Section */}
           <div className="form-section">
-            <img src={logo} alt="MentorLink Logo" className="login-logo" />
+            <div className="login-logo-brand">
+              <img src={logo} alt="MentorLink" className="login-logo" />
+              <span className="login-logo-text">MentorLink</span>
+            </div>
             <h2 className="welcome-text">Welcome Back!</h2>
             <h3 className="welcome-subtext">
               Welcome to <span className="highlight">MENTOR LINK</span>

@@ -92,10 +92,33 @@
   justify-content: center;
 }
 
-.login-logo {
-  width: 180px;
+.login-logo-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
   margin-bottom: 1.5rem;
-  height: auto;
+}
+
+.login-logo {
+  width: 48px;
+  height: 48px;
+  object-fit: contain;
+  border-radius: 10px;
+}
+
+.login-logo-text {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1f2937;
+  letter-spacing: -0.02em;
+}
+
+body.dark-mode .login-logo {
+  filter: brightness(1.2) contrast(1.1);
+}
+
+body.dark-mode .login-logo-text {
+  color: #f1f5f9;
 }
 
 /* Welcome text */

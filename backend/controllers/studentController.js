@@ -118,7 +118,7 @@ const getStudentProfile = async (req, res) => {
       return res.json({ student });
     }
 
-    const student = await Student.findOne({ user: userId }).populate('user', 'name email bio profileImage location about connectionsCount');
+    const student = await Student.findOne({ user: userId }).populate('user', 'name email bio profileImage location about connectionsCount followersCount');
     if (!student) {
       return res.status(404).json({ message: 'Student profile not found' });
     }
@@ -224,7 +224,7 @@ const getAllStudents = async (req, res) => {
     }
 
     const students = await Student.find()
-      .populate('user', 'name email bio profileImage location about connectionsCount')
+      .populate('user', 'name email bio profileImage location about connectionsCount followersCount')
       .sort({ createdAt: -1 });
 
     res.json({ students });
@@ -250,7 +250,7 @@ const getStudentById = async (req, res) => {
     }
 
     const student = await Student.findById(id)
-      .populate('user', 'name email bio profileImage location about connectionsCount');
+      .populate('user', 'name email bio profileImage location about connectionsCount followersCount');
 
     if (!student) {
       return res.status(404).json({ message: 'Student not found' });
