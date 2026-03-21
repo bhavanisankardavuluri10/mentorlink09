@@ -15,7 +15,6 @@ import './MentorProfile.css';
 
 // Material UI Icons
 import PersonIcon from '@mui/icons-material/Person';
-import PeopleIcon from '@mui/icons-material/People';
 import GroupsIcon from '@mui/icons-material/Groups';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import WorkIcon from '@mui/icons-material/Work';
@@ -27,9 +26,6 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import HourglassEmptyIcon from '@mui/icons-material/HourglassEmpty';
 import ChatIcon from '@mui/icons-material/Chat';
 import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
-import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
-import TrendingUpIcon from '@mui/icons-material/TrendingUp';
-import AssessmentIcon from '@mui/icons-material/Assessment';
 import HistoryIcon from '@mui/icons-material/History';
 import ThumbUpIcon from '@mui/icons-material/ThumbUp';
 import ThumbDownIcon from '@mui/icons-material/ThumbDown';
@@ -38,7 +34,6 @@ import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 import LinkedInIcon from '@mui/icons-material/LinkedIn';
 import StarIcon from '@mui/icons-material/Star';
 import EmailIcon from '@mui/icons-material/Email';
-import BarChartIcon from '@mui/icons-material/BarChart';
 import TimelineIcon from '@mui/icons-material/Timeline';
 import Tooltip from '@mui/material/Tooltip';
 import CircularProgress from '@mui/material/CircularProgress';
@@ -59,6 +54,7 @@ import DevicesIcon from '@mui/icons-material/Devices';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import WorkHistoryIcon from '@mui/icons-material/WorkHistory';
+import FilterListIcon from '@mui/icons-material/FilterList';
 import { FaUserFriends, FaLink } from 'react-icons/fa';
 
 const MentorProfile = () => {
@@ -82,11 +78,7 @@ const MentorProfile = () => {
   const [isOwnProfile, setIsOwnProfile] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [canMessage, setCanMessage] = useState(false);
-  const [profileViews, setProfileViews] = useState(0);
-  const [weeklyViewCount, setWeeklyViewCount] = useState(0);
-  const [viewTrend, setViewTrend] = useState(0);
   const [profileStrength, setProfileStrength] = useState(0);
-  const [showAnalytics, setShowAnalytics] = useState(false);
   const [editForm, setEditForm] = useState({
     linkedin: '',
     role: '',
@@ -160,7 +152,6 @@ const MentorProfile = () => {
     setActiveMentees([]);
     setActiveTab('requests');
     setRequestsTab('pending');
-    setShowAnalytics(false);
     setEditForm({
       linkedin: '',
       role: '',
@@ -186,8 +177,6 @@ const MentorProfile = () => {
           setConnectionsCount(response.mentor.user?.connectionsCount || 0);
           setFollowersCount(response.mentor.user?.followersCount || 0);
           setMenteesCount(response.mentor.menteesCount || response.mentor.activeMentees?.length || 0);
-          setProfileViews(response.mentor.totalProfileViews || 0);
-          setWeeklyViewCount(response.mentor.weeklyViewCount || 0);
           setIsOwnProfile(true);
 
           const strength = calculateProfileStrength(response.mentor);
@@ -205,14 +194,6 @@ const MentorProfile = () => {
             headline: response.mentor.headline || `${response.mentor.role || 'Mentor'} | ${response.mentor.primaryExperience || 'Experienced Professional'}`,
           });
 
-          // Fetch analytics if own profile
-          try {
-            const analytics = await followAPI.getProfileAnalytics();
-            setViewTrend(analytics.viewTrend || 0);
-          } catch (error) {
-            console.error('Error fetching analytics:', error);
-          }
-
           setLoading(false);
           return;
         }
@@ -228,8 +209,6 @@ const MentorProfile = () => {
         setConnectionsCount(response.mentor.user?.connectionsCount || 0);
         setFollowersCount(response.mentor.user?.followersCount || 0);
         setMenteesCount(response.mentor.menteesCount || response.mentor.activeMentees?.length || 0);
-        setProfileViews(response.mentor.totalProfileViews || 0);
-        setWeeklyViewCount(response.mentor.weeklyViewCount || 0);
 
         const strength = calculateProfileStrength(response.mentor);
         setProfileStrength(strength);
@@ -237,8 +216,7 @@ const MentorProfile = () => {
         // Track profile view
         if (isAuthenticated()) {
           try {
-            const viewData = await followAPI.trackProfileView(response.mentor._id);
-            setProfileViews(viewData.totalViews || response.mentor.totalProfileViews || 0);
+            await followAPI.trackProfileView(response.mentor._id);
           } catch (error) {
             console.error('Error tracking view:', error);
           }
@@ -821,729 +799,533 @@ const MentorProfile = () => {
       <div className={`app-container${sidebarCollapsed ? ' sidebar-collapsed' : ''}`}>
         <Sidebar />
         <main className="mentor-profile-main">
-          <div className={`profile-layout-grid${isOwnProfile ? ' has-sidebar' : ''}`}>
-            <div className="profile-main-column">
-          {/* Profile Header Section */}
-          <header className="profile-header-section">
-            {/* Profile Header Card */}
-            <div className="profile-header-card">
-              {/* Cover Image Section */}
-              <div
-                className="cover-image-section"
-                onClick={handleCoverImageClick}
-                style={{
-                  backgroundImage: mentor.coverImage
-                    ? `url(${mentor.coverImage})`
-                    : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                  cursor: isOwnProfile ? 'pointer' : 'default'
-                }}
-              >
-                {isOwnProfile && (
-                  <div className="cover-upload-overlay">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-                      <circle cx="12" cy="13" r="4" />
-                    </svg>
-                    {uploadingCover ? 'Uploading...' : 'Change cover'}
-                  </div>
-                )}
-                <input
-                  ref={coverInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleCoverImageChange}
-                  style={{ display: 'none' }}
+
+          {/* 1. Banner - Full Width */}
+          <div className="profile-banner-wrapper">
+            <div
+              className="cover-image-section"
+              onClick={handleCoverImageClick}
+              style={{ cursor: isOwnProfile ? 'pointer' : 'default' }}
+            >
+              {mentor.coverImage ? (
+                <img
+                  src={mentor.coverImage}
+                  alt="Cover"
+                  className="cover-image-fill"
                 />
+              ) : (
+                <div className="cover-image-gradient" />
+              )}
+              {isOwnProfile && (
+                <div className="cover-upload-overlay">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                    <circle cx="12" cy="13" r="4" />
+                  </svg>
+                  {uploadingCover ? 'Uploading...' : 'Change cover'}
+                </div>
+              )}
+              <input
+                ref={coverInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleCoverImageChange}
+                style={{ display: 'none' }}
+              />
+            </div>
+          </div>
+
+          {/* Two-Column Layout */}
+          <div className="profile-cards-container">
+            <div className={`profile-two-col${isOwnProfile ? ' has-sidebar' : ''}`}>
+            <div className="profile-left-col">
+
+            {/* 2. Profile Header Card */}
+            <div className="profile-section-card profile-header-info-card">
+              {isOwnProfile && (
+                <Tooltip title="Edit Profile" arrow>
+                  <span className="inline-edit-pencil card-edit-btn" onClick={() => setIsEditing(!isEditing)}>
+                    <EditIcon sx={{ fontSize: 18 }} />
+                  </span>
+                </Tooltip>
+              )}
+              <div className="profile-top-section">
+                <div className="profile-photo-wrapper" onClick={handleProfileImageClick}>
+                  <img
+                    src={mentor.user?.profileImage || 'https://cdn-icons-png.flaticon.com/512/3177/3177440.png'}
+                    alt={mentor.user?.name || 'Mentor'}
+                    className="profile-photo-large"
+                  />
+                  {isOwnProfile && (
+                    <div className="photo-edit-badge">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                        <circle cx="12" cy="13" r="4" />
+                      </svg>
+                    </div>
+                  )}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleProfileImageChange}
+                    style={{ display: 'none' }}
+                  />
+                </div>
+
+                <div className="profile-name-section">
+                  <h1 className="profile-name-large">
+                    {mentor.user?.name || 'Mentor'}
+                    {mentor.verified && (
+                      <span className="verified-badge-large">
+                        <CheckCircleIcon sx={{ fontSize: 24, color: '#0a66c2' }} />
+                      </span>
+                    )}
+                  </h1>
+                  <div className="profile-role-stats-row">
+                    <div className="profile-designation">
+                      <PersonIcon sx={{ fontSize: 18, marginRight: '6px' }} />
+                      Mentor
+                    </div>
+                    <span className="role-stats-divider">·</span>
+                    <Tooltip title="View Followers" arrow>
+                      <span
+                        className="inline-stat"
+                        onClick={() => {
+                          setModalTitle('Followers');
+                          setModalFetch(() => () => followAPI.getFollowers(mentor.user._id).then(r => r.followers || []));
+                          setModalOpen(true);
+                        }}
+                      >
+                        <strong>{followersCount}</strong> Followers
+                      </span>
+                    </Tooltip>
+                    <span className="role-stats-divider">·</span>
+                    <Tooltip title="View Connections" arrow>
+                      <span
+                        className="inline-stat"
+                        onClick={() => {
+                          setModalTitle('Connections');
+                          setModalFetch(() => () => connectionAPI.getConnections().then(r => r.connections || []));
+                          setModalOpen(true);
+                        }}
+                      >
+                        <strong>{connectionsCount}</strong> Connections
+                      </span>
+                    </Tooltip>
+                  </div>
+                  <p className="profile-headline-large">
+                    {mentor.headline || `${mentor.role || 'Mentor'} | ${mentor.primaryExperience || 'Experienced Professional'}`}
+                  </p>
+                  {(mentor.user?.bio || mentor.user?.about) && (() => {
+                    const tagline = mentor.user?.bio || mentor.user?.about || '';
+                    return (
+                      <p className="profile-tagline">
+                        {tagline.length > 120 ? tagline.substring(0, 120) + '...' : tagline}
+                      </p>
+                    );
+                  })()}
+                </div>
               </div>
 
-              {/* Offset Div for Spacing */}
-              <div className="profile-header-offset" />
+              {!isOwnProfile && (
+                <div className="profile-action-buttons">
+                  <button
+                    className={`btn-follow-action ${isFollowing ? 'following' : ''}`}
+                    onClick={handleFollow}
+                    disabled={following}
+                  >
+                    {following ? 'Loading...' : isFollowing ? 'Following' : 'Follow'}
+                  </button>
+                  <button
+                    className="btn-connect-action"
+                    onClick={handleConnect}
+                    disabled={connecting}
+                  >
+                    {connecting ? 'Loading...' : isConnected ? 'Connected' : 'Connect'}
+                  </button>
+                  {canMessage && (
+                    <Tooltip title="Send Message" arrow>
+                      <button
+                        className="btn-icon-action"
+                        onClick={() => navigate(`/messages/${mentor.user?._id}`)}
+                      >
+                        <EmailIcon />
+                      </button>
+                    </Tooltip>
+                  )}
+                  {mentor.linkedin && (
+                    <Tooltip title="View LinkedIn Profile" arrow>
+                      <a
+                        href={mentor.linkedin}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn-icon-action"
+                      >
+                        <LinkedInIcon />
+                      </a>
+                    </Tooltip>
+                  )}
+                </div>
+              )}
+            </div>
 
-              {/* Profile Header Content - Split Layout */}
-              <div className="profile-header-content split-layout">
-                {/* Left Column: Fluid Content */}
-                <div className="header-left-column">
-                  <div className="profile-top-section">
-                    {/* Profile Photo */}
-                    <div className="profile-photo-wrapper" onClick={handleProfileImageClick}>
-                      <img
-                        src={mentor.user?.profileImage || 'https://cdn-icons-png.flaticon.com/512/3177/3177440.png'}
-                        alt={mentor.user?.name || 'Mentor'}
-                        className="profile-photo-large"
-                      />
-                      {isOwnProfile && (
-                        <div className="photo-edit-badge">
-                          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
-                            <circle cx="12" cy="13" r="4" />
-                          </svg>
-                        </div>
-                      )}
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/*"
-                        onChange={handleProfileImageChange}
-                        style={{ display: 'none' }}
-                      />
-                    </div>
+            {/* 3. About Card */}
+            {(mentor.user?.bio || mentor.user?.about) && !isEditing && (
+              <section className="profile-section-card about-section-card">
+                <h3 className="section-title-main">About</h3>
+                <p className="about-content">{mentor.user?.bio || mentor.user?.about}</p>
+              </section>
+            )}
 
-                    {/* Name and Info */}
-                    <div className="profile-name-section">
-                      <h1 className="profile-name-large">
-                        {mentor.user?.name || 'Mentor'}
-                        {mentor.verified && (
-                          <span className="verified-badge-large">
-                            <CheckCircleIcon sx={{ fontSize: 24, color: '#0a66c2' }} />
-                          </span>
-                        )}
-                      </h1>
-                      <div className="profile-designation">
-                        <PersonIcon sx={{ fontSize: 18, marginRight: '6px' }} />
-                        Mentor
+            {/* 4. Skills & Domains Card */}
+            {(mentor.skills?.length > 0 || mentor.primaryDomain || mentor.secondaryDomain) && (
+              <div className="profile-section-card">
+                <h3 className="section-title-main">
+                  <CodeIcon sx={{ fontSize: 18, marginRight: '6px' }} />
+                  Skills & Domains
+                </h3>
+                <div className="skills-chips-container">
+                  {mentor.primaryDomain && (
+                    <Tooltip title="Primary Domain" arrow>
+                      <div className="skill-chip skill-chip-primary">
+                        <StarIcon sx={{ fontSize: 18 }} />
+                        {mentor.primaryDomain}
                       </div>
-                      <p className="profile-headline-large">
-                        {mentor.headline || `${mentor.role || 'Mentor'} | ${mentor.primaryExperience || 'Experienced Professional'}`}
-                      </p>
+                    </Tooltip>
+                  )}
+                  {mentor.secondaryDomain && (
+                    <Tooltip title="Secondary Domain" arrow>
+                      <div className="skill-chip">
+                        {getSkillIcon(mentor.secondaryDomain)}
+                        {mentor.secondaryDomain}
+                      </div>
+                    </Tooltip>
+                  )}
+                  {mentor.skills?.map((skill, index) => (
+                    <Tooltip key={index} title={skill} arrow>
+                      <div className="skill-chip">
+                        {getSkillIcon(skill)}
+                        {skill}
+                      </div>
+                    </Tooltip>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 4. Experience & Expertise Card */}
+            <div className="profile-section-card">
+              <h3 className="section-title-main">Experience & Expertise</h3>
+              <div className="expertise-grid">
+                {mentor.role && (
+                  <div className="expertise-card">
+                    <div className="expertise-card__icon expertise-card__icon--role">
+                      <BusinessIcon sx={{ fontSize: 20 }} />
                     </div>
-
-                    {/* Key Metrics */}
-                    <div className="key-metrics-section">
-                      <Tooltip title="View Followers" arrow>
-                        <div
-                          className="metric-item metric-clickable"
-                          onClick={() => {
-                            setModalTitle('Followers');
-                            setModalFetch(() => () => followAPI.getFollowers(mentor.user._id).then(r => r.followers || []));
-                            setModalOpen(true);
-                          }}
-                        >
-                          <div className="metric-icon metric-icon--followers">
-                            <FaUserFriends />
-                          </div>
-                          <div className="metric-content">
-                            <span className="metric-value">{followersCount}</span>
-                            <span className="metric-label">Followers</span>
-                          </div>
-                        </div>
-                      </Tooltip>
-
-                      <div className="metric-divider" />
-
-                      <Tooltip title="View Connections" arrow>
-                        <div
-                          className="metric-item metric-clickable"
-                          onClick={() => {
-                            setModalTitle('Connections');
-                            setModalFetch(() => () => connectionAPI.getConnections().then(r => r.connections || []));
-                            setModalOpen(true);
-                          }}
-                        >
-                          <div className="metric-icon metric-icon--connections">
-                            <FaLink />
-                          </div>
-                          <div className="metric-content">
-                            <span className="metric-value">{connectionsCount}</span>
-                            <span className="metric-label">Connections</span>
-                          </div>
-                        </div>
-                      </Tooltip>
+                    <div className="expertise-card__body">
+                      <span className="expertise-card__label">Current Role</span>
+                      <span className="expertise-card__value">{mentor.role}</span>
                     </div>
                   </div>
+                )}
+                {mentor.primaryExperience && (
+                  <div className="expertise-card">
+                    <div className="expertise-card__icon expertise-card__icon--exp">
+                      <WorkHistoryIcon sx={{ fontSize: 20 }} />
+                    </div>
+                    <div className="expertise-card__body">
+                      <span className="expertise-card__label">Industry Experience</span>
+                      <span className="expertise-card__value">
+                        {mentor.primaryExperience} {!isNaN(mentor.primaryExperience) ? 'Years' : ''}
+                      </span>
+                    </div>
+                  </div>
+                )}
+                {mentor.mentorshipExperience && (
+                  <div className="expertise-card">
+                    <div className="expertise-card__icon expertise-card__icon--mentor">
+                      <SchoolIcon sx={{ fontSize: 20 }} />
+                    </div>
+                    <div className="expertise-card__body">
+                      <span className="expertise-card__label">Mentorship Experience</span>
+                      <span className="expertise-card__value">
+                        {mentor.mentorshipExperience} {!isNaN(mentor.mentorshipExperience) ? 'Years' : ''}
+                      </span>
+                    </div>
+                  </div>
+                )}
+                {mentor.primaryDomain && (
+                  <div className="expertise-card">
+                    <div className="expertise-card__icon expertise-card__icon--domain">
+                      <CodeIcon sx={{ fontSize: 20 }} />
+                    </div>
+                    <div className="expertise-card__body">
+                      <span className="expertise-card__label">Primary Domain</span>
+                      <span className="expertise-card__value">{mentor.primaryDomain}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
 
-                  {/* About Section */}
-                  <div className="form-group-new full-width">
-                    <label>About</label>
-                    <textarea
-                      value={editForm.about}
-                      onChange={(e) => setEditForm({ ...editForm, about: e.target.value })}
-                      placeholder="Tell us about yourself..."
-                      className="form-textarea-new"
-                      rows="4"
+            {/* 5. Availability Card */}
+            {mentor.weeklyAvailability?.length > 0 && (
+              <div className="profile-section-card">
+                <h3 className="section-title-main">
+                  <EventAvailableIcon sx={{ fontSize: 18, marginRight: '6px' }} />
+                  Availability
+                </h3>
+                <div className="preference-tags-container">
+                  {mentor.weeklyAvailability.map((avail, index) => (
+                    <span key={index} className="preference-tag">
+                      <AccessTimeIcon sx={{ fontSize: 14, marginRight: '4px' }} />
+                      {avail}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 6. Mentoring Style Card */}
+            {mentor.mentoringStyle?.length > 0 && (
+              <div className="profile-section-card">
+                <h3 className="section-title-main">
+                  <GroupsIcon sx={{ fontSize: 18, marginRight: '6px' }} />
+                  Mentoring Style
+                </h3>
+                <div className="preference-tags-container">
+                  {mentor.mentoringStyle.map((style, index) => (
+                    <span key={index} className="preference-tag">{style}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Edit Form or Display Sections */}
+            {isEditing ? (
+              <div className="profile-section-card edit-profile-card">
+                <h3 className="section-title-main">Edit Profile Information</h3>
+
+                <div className="edit-form-grid-new">
+                  <div className="form-group-new">
+                    <label>Headline</label>
+                    <input
+                      type="text"
+                      value={editForm.headline}
+                      onChange={(e) => setEditForm({ ...editForm, headline: e.target.value })}
+                      placeholder="Your professional headline"
+                      className="form-input-new"
                     />
                   </div>
 
-                  {/* Experience & Expertise Section */}
-                  <section className="profile-content-section">
-                    <h2>Experience & Expertise</h2>
-
-                    <div className="expertise-grid">
-                      {mentor.role && (
-                        <div className="expertise-card">
-                          <div className="expertise-card__icon expertise-card__icon--role">
-                            <BusinessIcon sx={{ fontSize: 20 }} />
-                          </div>
-                          <div className="expertise-card__body">
-                            <span className="expertise-card__label">Current Role</span>
-                            <span className="expertise-card__value">{mentor.role}</span>
-                          </div>
-                        </div>
-                      )}
-
-                      {mentor.primaryExperience && (
-                        <div className="expertise-card">
-                          <div className="expertise-card__icon expertise-card__icon--exp">
-                            <WorkHistoryIcon sx={{ fontSize: 20 }} />
-                          </div>
-                          <div className="expertise-card__body">
-                            <span className="expertise-card__label">Industry Experience</span>
-                            <span className="expertise-card__value">
-                              {mentor.primaryExperience} {!isNaN(mentor.primaryExperience) ? 'Years' : ''}
-                            </span>
-                          </div>
-                        </div>
-                      )}
-
-                      {mentor.mentorshipExperience && (
-                        <div className="expertise-card">
-                          <div className="expertise-card__icon expertise-card__icon--mentor">
-                            <SchoolIcon sx={{ fontSize: 20 }} />
-                          </div>
-                          <div className="expertise-card__body">
-                            <span className="expertise-card__label">Mentorship Experience</span>
-                            <span className="expertise-card__value">
-                              {mentor.mentorshipExperience} {!isNaN(mentor.mentorshipExperience) ? 'Years' : ''}
-                            </span>
-                          </div>
-                        </div>
-                      )}
-
-                      {mentor.primaryDomain && (
-                        <div className="expertise-card">
-                          <div className="expertise-card__icon expertise-card__icon--domain">
-                            <CodeIcon sx={{ fontSize: 20 }} />
-                          </div>
-                          <div className="expertise-card__body">
-                            <span className="expertise-card__label">Primary Domain</span>
-                            <span className="expertise-card__value">{mentor.primaryDomain}</span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </section>
-                </div>
-
-                {/* Right Column: Skills, Availability, Style, Actions */}
-                <div className="header-right-column">
-                  {/* Skills & Domains */}
-                  {(mentor.skills?.length > 0 || mentor.primaryDomain || mentor.secondaryDomain) && (
-                    <div className="header-info-block">
-                      <h3>
-                        <CodeIcon sx={{ fontSize: 16, marginRight: '6px' }} />
-                        Skills & Domains
-                      </h3>
-                      <div className="skills-chips-container">
-                        {mentor.primaryDomain && (
-                          <Tooltip title="Primary Domain" arrow>
-                            <div className="skill-chip skill-chip-primary">
-                              <StarIcon sx={{ fontSize: 18 }} />
-                              {mentor.primaryDomain}
-                            </div>
-                          </Tooltip>
-                        )}
-                        {mentor.secondaryDomain && (
-                          <Tooltip title="Secondary Domain" arrow>
-                            <div className="skill-chip">
-                              {getSkillIcon(mentor.secondaryDomain)}
-                              {mentor.secondaryDomain}
-                            </div>
-                          </Tooltip>
-                        )}
-                        {mentor.skills?.map((skill, index) => (
-                          <Tooltip key={index} title={skill} arrow>
-                            <div className="skill-chip">
-                              {getSkillIcon(skill)}
-                              {skill}
-                            </div>
-                          </Tooltip>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Availability */}
-                  {mentor.weeklyAvailability?.length > 0 && (
-                    <div className="header-info-block">
-                      <h3>
-                        <EventAvailableIcon sx={{ fontSize: 18, marginRight: '6px' }} />
-                        Availability
-                      </h3>
-                      <div className="preference-tags-container">
-                        {mentor.weeklyAvailability.map((avail, index) => (
-                          <span key={index} className="preference-tag">
-                            <AccessTimeIcon sx={{ fontSize: 14, marginRight: '4px' }} />
-                            {avail}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Mentoring Style */}
-                  {mentor.mentoringStyle?.length > 0 && (
-                    <div className="header-info-block">
-                      <h3>
-                        <GroupsIcon sx={{ fontSize: 18, marginRight: '6px' }} />
-                        Mentoring Style
-                      </h3>
-                      <div className="preference-tags-container">
-                        {mentor.mentoringStyle.map((style, index) => (
-                          <span key={index} className="preference-tag">{style}</span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Action Buttons - Moved to right column flow */}
-                  <div className="profile-action-buttons right-column-actions">
-                    {isOwnProfile ? (
-                      <>
-                        <button className="btn-primary-action" onClick={() => setIsEditing(!isEditing)}>
-                          <EditIcon sx={{ fontSize: 18 }} />
-                          {isEditing ? 'Cancel Edit' : 'Edit Profile'}
-                        </button>
-                        <button className="btn-secondary-action" onClick={() => setShowAnalytics(!showAnalytics)}>
-                          <AssessmentIcon sx={{ fontSize: 18 }} />
-                          {showAnalytics ? 'Hide Analytics' : 'View Analytics'}
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <button
-                          className={`btn-follow-action ${isFollowing ? 'following' : ''}`}
-                          onClick={handleFollow}
-                          disabled={following}
-                        >
-                          {following ? 'Loading...' : isFollowing ? 'Following' : 'Follow'}
-                        </button>
-                        <button
-                          className="btn-connect-action"
-                          onClick={handleConnect}
-                          disabled={connecting}
-                        >
-                          {connecting ? 'Loading...' : isConnected ? 'Connected' : 'Connect'}
-                        </button>
-                        {canMessage && (
-                          <Tooltip title="Send Message" arrow>
-                            <button
-                              className="btn-icon-action"
-                              onClick={() => navigate(`/messages/${mentor.user?._id}`)}
-                            >
-                              <EmailIcon />
-                            </button>
-                          </Tooltip>
-                        )}
-                        {mentor.linkedin && (
-                          <Tooltip title="View LinkedIn Profile" arrow>
-                            <a
-                              href={mentor.linkedin}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="btn-icon-action"
-                            >
-                              <LinkedInIcon />
-                            </a>
-                          </Tooltip>
-                        )}
-                      </>
-                    )}
+                  <div className="form-group-new">
+                    <label>Current Role</label>
+                    <input
+                      type="text"
+                      value={editForm.role}
+                      onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
+                      placeholder="e.g., Senior Software Engineer"
+                      className="form-input-new"
+                    />
                   </div>
-                </div>
-              </div>
-            </div>
-          </header>
 
+                  <div className="form-group-new">
+                    <label>Years of Experience</label>
+                    <input
+                      type="text"
+                      value={editForm.primaryExperience}
+                      onChange={(e) => setEditForm({ ...editForm, primaryExperience: e.target.value })}
+                      placeholder="e.g., 5+ years"
+                      className="form-input-new"
+                    />
+                  </div>
 
+                  <div className="form-group-new">
+                    <label>Mentorship Experience</label>
+                    <input
+                      type="text"
+                      value={editForm.mentorshipExperience}
+                      onChange={(e) => setEditForm({ ...editForm, mentorshipExperience: e.target.value })}
+                      placeholder="e.g., 3 years"
+                      className="form-input-new"
+                    />
+                  </div>
 
-          {/* Analytics Section (Own Profile Only) */}
-          {isOwnProfile && showAnalytics && (
-            <div className="analytics-section-card">
-              <h3 className="section-title-main">
-                <BarChartIcon sx={{ marginRight: '8px' }} />
-                Analytics & Insights
-              </h3>
-              <div className="analytics-metrics-grid">
-                <div className="analytics-metric-card">
-                  <VisibilityOutlinedIcon className="analytics-icon" />
-                  <div className="analytics-metric-info">
-                    <div className="analytics-metric-value">{profileViews}</div>
-                    <div className="analytics-metric-label">Total Profile Views</div>
-                    {viewTrend !== 0 && (
-                      <div className={`analytics-trend ${viewTrend > 0 ? 'positive' : 'negative'}`}>
-                        <TrendingUpIcon sx={{ fontSize: 16 }} />
-                        {viewTrend > 0 ? '+' : ''}{viewTrend}% this week
-                      </div>
-                    )}
+                  <div className="form-group-new full-width">
+                    <label>LinkedIn Profile</label>
+                    <input
+                      type="url"
+                      value={editForm.linkedin}
+                      onChange={(e) => setEditForm({ ...editForm, linkedin: e.target.value })}
+                      placeholder="https://linkedin.com/in/yourprofile"
+                      className="form-input-new"
+                    />
                   </div>
                 </div>
 
-
-                <div className="analytics-metric-card">
-                  <GroupsIcon className="analytics-icon" />
-                  <div className="analytics-metric-info">
-                    <div className="analytics-metric-value">{menteesCount}</div>
-                    <div className="analytics-metric-label">Active Mentees</div>
-                  </div>
-                </div>
-
-                <div className="analytics-metric-card">
-                  <PeopleIcon className="analytics-icon" />
-                  <div className="analytics-metric-info">
-                    <div className="analytics-metric-value">{followersCount}</div>
-                    <div className="analytics-metric-label">Followers</div>
-                  </div>
+                <div className="edit-form-actions-new">
+                  <button className="btn-cancel-new" onClick={handleCancelEdit}>Cancel</button>
+                  <button className="btn-save-new" onClick={handleSaveProfile}>Save Changes</button>
                 </div>
               </div>
-            </div>
-          )}
-
-          {/* Edit Form or Display Sections */}
-          {isEditing ? (
-            <div className="edit-profile-card">
-              <h3 className="section-title-main">Edit Profile Information</h3>
-
-              <div className="edit-form-grid-new">
-                <div className="form-group-new">
-                  <label>Headline</label>
-                  <input
-                    type="text"
-                    value={editForm.headline}
-                    onChange={(e) => setEditForm({ ...editForm, headline: e.target.value })}
-                    placeholder="Your professional headline"
-                    className="form-input-new"
-                  />
-                </div>
-
-                <div className="form-group-new">
-                  <label>Current Role</label>
-                  <input
-                    type="text"
-                    value={editForm.role}
-                    onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
-                    placeholder="e.g., Senior Software Engineer"
-                    className="form-input-new"
-                  />
-                </div>
-
-                <div className="form-group-new">
-                  <label>Years of Experience</label>
-                  <input
-                    type="text"
-                    value={editForm.primaryExperience}
-                    onChange={(e) => setEditForm({ ...editForm, primaryExperience: e.target.value })}
-                    placeholder="e.g., 5+ years"
-                    className="form-input-new"
-                  />
-                </div>
-
-                <div className="form-group-new">
-                  <label>Mentorship Experience</label>
-                  <input
-                    type="text"
-                    value={editForm.mentorshipExperience}
-                    onChange={(e) => setEditForm({ ...editForm, mentorshipExperience: e.target.value })}
-                    placeholder="e.g., 3 years"
-                    className="form-input-new"
-                  />
-                </div>
-
-
-
-                <div className="form-group-new full-width">
-                  <label>LinkedIn Profile</label>
-                  <input
-                    type="url"
-                    value={editForm.linkedin}
-                    onChange={(e) => setEditForm({ ...editForm, linkedin: e.target.value })}
-                    placeholder="https://linkedin.com/in/yourprofile"
-                    className="form-input-new"
-                  />
-                </div>
-              </div>
-
-              <div className="edit-form-actions-new">
-                <button className="btn-cancel-new" onClick={handleCancelEdit}>Cancel</button>
-                <button className="btn-save-new" onClick={handleSaveProfile}>Save Changes</button>
-              </div>
-            </div>
-          ) : (
-            <>
+            ) : (
+              <>
 
 
 
 
 
-
-
-              {/* Mentorship Dashboard (Own Profile Only) */}
+              {/* Mentees Section (Own Profile Only) */}
               {isOwnProfile && !id && (
                 <div className="mentorship-dashboard-card">
                   <div className="dashboard-tabs">
                     <button
-                      className={`dashboard-tab ${activeTab === 'requests' ? 'active' : ''}`}
-                      onClick={() => setActiveTab('requests')}
-                    >
-                      <EmailIcon sx={{ fontSize: 18, marginRight: '6px' }} />
-                      My Requests
-                    </button>
-                    <button
-                      className={`dashboard-tab ${activeTab === 'mentees' ? 'active' : ''}`}
-                      onClick={() => setActiveTab('mentees')}
+                      className={`dashboard-tab ${menteesTab === 'active' ? 'active' : ''}`}
+                      onClick={() => setMenteesTab('active')}
                     >
                       <GroupsIcon sx={{ fontSize: 18, marginRight: '6px' }} />
-                      Past & Current Mentees
+                      Active Mentees
+                    </button>
+                    <button
+                      className={`dashboard-tab ${menteesTab === 'past' ? 'active' : ''}`}
+                      onClick={() => setMenteesTab('past')}
+                    >
+                      <HistoryIcon sx={{ fontSize: 18, marginRight: '6px' }} />
+                      Past Mentees
                     </button>
                   </div>
 
                   <div className="dashboard-content">
-                    {activeTab === 'requests' && (
-                      <div className="requests-tab-content">
-                        <div className="requests-subtabs">
-                          <button
-                            className={`requests-subtab ${requestsTab === 'pending' ? 'active' : ''}`}
-                            onClick={() => setRequestsTab('pending')}
-                          >
-                            <HourglassEmptyIcon sx={{ fontSize: 16, marginRight: '4px' }} />
-                            Pending
-                          </button>
-                          <button
-                            className={`requests-subtab ${requestsTab === 'accepted' ? 'active' : ''}`}
-                            onClick={() => setRequestsTab('accepted')}
-                          >
-                            <CheckCircleIcon sx={{ fontSize: 16, marginRight: '4px' }} />
-                            Approved
-                          </button>
-                          <button
-                            className={`requests-subtab ${requestsTab === 'rejected' ? 'active' : ''}`}
-                            onClick={() => setRequestsTab('rejected')}
-                          >
-                            <CancelIcon sx={{ fontSize: 16, marginRight: '4px' }} />
-                            Rejected
-                          </button>
-                        </div>
-
-                        <div className="requests-list">
-                          {loadingRequests ? (
-                            <div className="loading-state">
-                              <CircularProgress size={32} />
-                              <p>Loading requests...</p>
-                            </div>
-                          ) : requests.length === 0 ? (
+                    {loadingMentees ? (
+                      <div className="loading-state">
+                        <CircularProgress size={32} />
+                        <p>Loading mentees...</p>
+                      </div>
+                    ) : (
+                      <div className="mentees-grid-new">
+                        {menteesTab === 'active' ? (
+                          activeMentees.length === 0 ? (
                             <div className="empty-state-card">
                               <div className="empty-state-icon">
-                                <EmailIcon sx={{ fontSize: 56 }} />
+                                <GroupsIcon sx={{ fontSize: 56 }} />
                               </div>
-                              <h4 className="empty-state-title">No {requestsTab} requests</h4>
+                              <h4 className="empty-state-title">No active mentees yet</h4>
                               <p className="empty-state-message">
-                                {requestsTab === 'pending'
-                                  ? "You're all caught up! New requests will appear here."
-                                  : `You don't have any ${requestsTab} requests yet.`}
+                                Accept requests from the sidebar to start mentoring!
                               </p>
                             </div>
                           ) : (
-                            requests.map((request) => (
-                              <div key={request._id} className="request-card-new">
-                                <img
-                                  src={request.student?.profileImage || 'https://cdn-icons-png.flaticon.com/512/3177/3177440.png'}
-                                  alt={request.student?.name}
-                                  className="request-avatar-new"
-                                />
-                                <div className="request-info-new">
-                                  <div className="request-header-new">
-                                    <h4>{request.student?.name || 'Student'}</h4>
-                                    {getStatusBadge(request.status)}
+                            activeMentees.map((mentee) => (
+                              <div key={mentee._id} className="mentee-card-new compact">
+                                <div className="mentee-header">
+                                  <img
+                                    src={mentee.profileImage || 'https://cdn-icons-png.flaticon.com/512/3177/3177440.png'}
+                                    alt={mentee.name}
+                                    className="mentee-avatar-new"
+                                  />
+                                  <div className="mentee-basic-info">
+                                    <h4 className="mentee-name">{mentee.name}</h4>
+                                    <p className="mentee-email">{mentee.email}</p>
+                                    <span className="mentee-status-chip">
+                                      <CalendarTodayIcon sx={{ fontSize: 12, marginRight: '4px' }} />
+                                      Active Mentee
+                                    </span>
                                   </div>
-                                  <p className="request-message">{request.message?.substring(0, 100)}...</p>
                                 </div>
-                                <div className="request-actions-new">
-                                  {requestsTab === 'pending' && (
-                                    <>
-                                      <Tooltip title="Approve Request" arrow>
-                                        <button
-                                          className="btn-icon-action btn-approve"
-                                          onClick={() => handleAcceptRequest(request._id)}
-                                        >
-                                          <ThumbUpIcon />
-                                        </button>
-                                      </Tooltip>
-                                      <Tooltip title="Reject Request" arrow>
-                                        <button
-                                          className="btn-icon-action btn-reject"
-                                          onClick={() => handleRejectRequest(request._id)}
-                                        >
-                                          <ThumbDownIcon />
-                                        </button>
-                                      </Tooltip>
-                                    </>
-                                  )}
-                                  <Tooltip title="View Details" arrow>
+
+                                <div className="mentee-actions-new compact-actions">
+                                  <Tooltip title="Chat with Mentee" arrow>
                                     <button
-                                      className="btn-icon-action btn-view-detail"
-                                      onClick={() => handleViewRequest(request._id)}
+                                      className="btn-mentee-action"
+                                      onClick={() => navigate(`/messages/${mentee._id}`)}
                                     >
-                                      <RemoveRedEyeIcon />
+                                      <ChatIcon sx={{ fontSize: 16 }} />
+                                      Chat
+                                    </button>
+                                  </Tooltip>
+                                  <Tooltip title="Schedule Session" arrow>
+                                    <button
+                                      className="btn-mentee-action"
+                                      onClick={() => openScheduleModal(mentee)}
+                                    >
+                                      <CalendarTodayIcon sx={{ fontSize: 16 }} />
+                                      Schedule
+                                    </button>
+                                  </Tooltip>
+                                  <Tooltip title="View Session History" arrow>
+                                    <button
+                                      className="btn-mentee-action"
+                                      onClick={() => openHistoryModal(mentee)}
+                                    >
+                                      <HistoryIcon sx={{ fontSize: 16 }} />
+                                      History
+                                    </button>
+                                  </Tooltip>
+                                  <Tooltip title="View Profile" arrow>
+                                    <button
+                                      className="btn-icon-action btn-view-profile"
+                                      onClick={() => navigate(`/student/${mentee._id}`)}
+                                    >
+                                      <AccountCircleIcon sx={{ fontSize: 20 }} />
                                     </button>
                                   </Tooltip>
                                 </div>
                               </div>
                             ))
-                          )}
-                        </div>
-                      </div>
-                    )}
-
-                    {activeTab === 'mentees' && (
-                      <div className="mentees-tab-content">
-                        {/* Sub-tabs for Active and Past Mentees */}
-                        <div className="requests-subtabs">
-                          <button
-                            className={`requests-subtab ${menteesTab === 'active' ? 'active' : ''}`}
-                            onClick={() => setMenteesTab('active')}
-                          >
-                            <GroupsIcon sx={{ fontSize: 16, marginRight: '4px' }} />
-                            Active Mentees
-                          </button>
-                          <button
-                            className={`requests-subtab ${menteesTab === 'past' ? 'active' : ''}`}
-                            onClick={() => setMenteesTab('past')}
-                          >
-                            <HistoryIcon sx={{ fontSize: 16, marginRight: '4px' }} />
-                            Past Mentees
-                          </button>
-                        </div>
-
-                        {loadingMentees ? (
-                          <div className="loading-state">
-                            <CircularProgress size={32} />
-                            <p>Loading mentees...</p>
-                          </div>
+                          )
                         ) : (
-                          <div className="mentees-grid-new">
-                            {menteesTab === 'active' ? (
-                              activeMentees.length === 0 ? (
-                                <div className="empty-state-card">
-                                  <div className="empty-state-icon">
-                                    <GroupsIcon sx={{ fontSize: 56 }} />
+                          pastMentees.length === 0 ? (
+                            <div className="empty-state-card">
+                              <div className="empty-state-icon">
+                                <HistoryIcon sx={{ fontSize: 56 }} />
+                              </div>
+                              <h4 className="empty-state-title">No past mentees</h4>
+                              <p className="empty-state-message">
+                                Completed mentorships will appear here once they're marked as finished.
+                              </p>
+                            </div>
+                          ) : (
+                            pastMentees.map((mentee) => (
+                              <div key={mentee._id} className="mentee-card-new compact mentee-card-past">
+                                <div className="mentee-header">
+                                  <img
+                                    src={mentee.profileImage || 'https://cdn-icons-png.flaticon.com/512/3177/3177440.png'}
+                                    alt={mentee.name}
+                                    className="mentee-avatar-new"
+                                  />
+                                  <div className="mentee-basic-info">
+                                    <h4 className="mentee-name">{mentee.name}</h4>
+                                    <p className="mentee-email">{mentee.email}</p>
+                                    <span className="mentee-status-chip completed">
+                                      <CheckCircleIcon sx={{ fontSize: 12, marginRight: '4px' }} />
+                                      Completed
+                                    </span>
                                   </div>
-                                  <h4 className="empty-state-title">No active mentees yet</h4>
-                                  <p className="empty-state-message">
-                                    Start your mentorship journey by accepting requests from the "My Requests" tab!
-                                  </p>
                                 </div>
-                              ) : (
-                                activeMentees.map((mentee) => (
-                                  <div key={mentee._id} className="mentee-card-new compact">
-                                    <div className="mentee-header">
-                                      <img
-                                        src={mentee.profileImage || 'https://cdn-icons-png.flaticon.com/512/3177/3177440.png'}
-                                        alt={mentee.name}
-                                        className="mentee-avatar-new"
-                                      />
-                                      <div className="mentee-basic-info">
-                                        <h4 className="mentee-name">{mentee.name}</h4>
-                                        <p className="mentee-email">{mentee.email}</p>
-                                        <span className="mentee-status-chip">
-                                          <CalendarTodayIcon sx={{ fontSize: 12, marginRight: '4px' }} />
-                                          Active Mentee
-                                        </span>
-                                      </div>
-                                    </div>
 
-                                    <div className="mentee-actions-new compact-actions">
-                                      <Tooltip title="Chat with Mentee" arrow>
-                                        <button
-                                          className="btn-mentee-action"
-                                          onClick={() => navigate(`/messages/${mentee._id}`)}
-                                        >
-                                          <ChatIcon sx={{ fontSize: 16 }} />
-                                          Chat
-                                        </button>
-                                      </Tooltip>
-                                      <Tooltip title="Schedule Session" arrow>
-                                        <button
-                                          className="btn-mentee-action"
-                                          onClick={() => openScheduleModal(mentee)}
-                                        >
-                                          <CalendarTodayIcon sx={{ fontSize: 16 }} />
-                                          Schedule
-                                        </button>
-                                      </Tooltip>
-                                      <Tooltip title="View Session History" arrow>
-                                        <button
-                                          className="btn-mentee-action"
-                                          onClick={() => openHistoryModal(mentee)}
-                                        >
-                                          <HistoryIcon sx={{ fontSize: 16 }} />
-                                          History
-                                        </button>
-                                      </Tooltip>
-                                      <Tooltip title="View Profile" arrow>
-                                        <button
-                                          className="btn-icon-action btn-view-profile"
-                                          onClick={() => navigate(`/student/${mentee._id}`)}
-                                        >
-                                          <AccountCircleIcon sx={{ fontSize: 20 }} />
-                                        </button>
-                                      </Tooltip>
-                                    </div>
-                                  </div>
-                                ))
-                              )
-                            ) : (
-                              // Past Mentees Tab
-                              pastMentees.length === 0 ? (
-                                <div className="empty-state-card">
-                                  <div className="empty-state-icon">
-                                    <HistoryIcon sx={{ fontSize: 56 }} />
-                                  </div>
-                                  <h4 className="empty-state-title">No past mentees</h4>
-                                  <p className="empty-state-message">
-                                    Completed mentorships will appear here once they're marked as finished.
-                                  </p>
+                                <div className="mentee-actions-new compact-actions">
+                                  <Tooltip title="View Session History" arrow>
+                                    <button
+                                      className="btn-mentee-action"
+                                      onClick={() => openHistoryModal(mentee)}
+                                    >
+                                      <HistoryIcon sx={{ fontSize: 16 }} />
+                                      History
+                                    </button>
+                                  </Tooltip>
+                                  <Tooltip title="View Profile" arrow>
+                                    <button
+                                      className="btn-icon-action btn-view-profile"
+                                      onClick={() => navigate(`/student/${mentee._id}`)}
+                                    >
+                                      <AccountCircleIcon sx={{ fontSize: 20 }} />
+                                    </button>
+                                  </Tooltip>
                                 </div>
-                              ) : (
-                                pastMentees.map((mentee) => (
-                                  <div key={mentee._id} className="mentee-card-new compact mentee-card-past">
-                                    <div className="mentee-header">
-                                      <img
-                                        src={mentee.profileImage || 'https://cdn-icons-png.flaticon.com/512/3177/3177440.png'}
-                                        alt={mentee.name}
-                                        className="mentee-avatar-new"
-                                      />
-                                      <div className="mentee-basic-info">
-                                        <h4 className="mentee-name">{mentee.name}</h4>
-                                        <p className="mentee-email">{mentee.email}</p>
-                                        <span className="mentee-status-chip completed">
-                                          <CheckCircleIcon sx={{ fontSize: 12, marginRight: '4px' }} />
-                                          Completed
-                                        </span>
-                                      </div>
-                                    </div>
-
-                                    <div className="mentee-actions-new compact-actions">
-                                      <Tooltip title="View Session History" arrow>
-                                        <button
-                                          className="btn-mentee-action"
-                                          onClick={() => openHistoryModal(mentee)}
-                                        >
-                                          <HistoryIcon sx={{ fontSize: 16 }} />
-                                          History
-                                        </button>
-                                      </Tooltip>
-                                      <Tooltip title="View Profile" arrow>
-                                        <button
-                                          className="btn-icon-action btn-view-profile"
-                                          onClick={() => navigate(`/student/${mentee._id}`)}
-                                        >
-                                          <AccountCircleIcon sx={{ fontSize: 20 }} />
-                                        </button>
-                                      </Tooltip>
-                                    </div>
-                                  </div>
-                                ))
-                              )
-                            )}
-                          </div>
+                              </div>
+                            ))
+                          )
                         )}
                       </div>
                     )}
@@ -1552,14 +1334,104 @@ const MentorProfile = () => {
               )}
             </>
           )}
-            </div>{/* end profile-main-column */}
 
-            {/* Right Sidebar - Connections, Suggestions & Events */}
+            </div>{/* end profile-left-col */}
+
+            {/* Right Column - Sidebar Cards */}
             {isOwnProfile && (
-              <aside className="profile-sidebar-column">
-                <div className="profile-sidebar-sticky">
-                  {/* Your Connections Card */}
-                  <div className="sidebar-card">
+              <div className="profile-right-col">
+                <div className="profile-right-sticky">
+
+                  {/* 9. My Requests Card */}
+                  <div className="profile-section-card sidebar-card sidebar-requests-card">
+                  <div className="sidebar-requests-header">
+                    <h3 className="sidebar-card-title">
+                      <EmailIcon sx={{ fontSize: 18 }} />
+                      My Requests
+                      {requests.length > 0 && (
+                        <span className="sidebar-card-count">{requests.length}</span>
+                      )}
+                    </h3>
+                    <div className="sidebar-requests-dropdown">
+                      <FilterListIcon sx={{ fontSize: 16, color: 'var(--text-secondary)' }} />
+                      <select
+                        value={requestsTab}
+                        onChange={(e) => setRequestsTab(e.target.value)}
+                        className="requests-filter-select"
+                      >
+                        <option value="pending">Pending</option>
+                        <option value="accepted">Accepted</option>
+                        <option value="rejected">Rejected</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div className="sidebar-requests-list">
+                    {loadingRequests ? (
+                      <div className="sidebar-loading">
+                        <CircularProgress size={24} />
+                      </div>
+                    ) : requests.length === 0 ? (
+                      <p className="sidebar-empty-text">
+                        No {requestsTab} requests
+                      </p>
+                    ) : (
+                      requests.slice(0, 5).map((request) => (
+                        <div key={request._id} className="sidebar-request-item">
+                          <img
+                            src={request.student?.profileImage || 'https://cdn-icons-png.flaticon.com/512/3177/3177440.png'}
+                            alt={request.student?.name}
+                            className="sidebar-avatar"
+                          />
+                          <div className="sidebar-request-info">
+                            <span className="sidebar-connection-name">
+                              {request.student?.name || 'Student'}
+                            </span>
+                            <span className="sidebar-request-msg">
+                              {request.message?.substring(0, 50)}...
+                            </span>
+                          </div>
+                          {requestsTab === 'pending' && (
+                            <div className="sidebar-request-actions">
+                              <Tooltip title="Accept" arrow>
+                                <button
+                                  className="sidebar-req-btn sidebar-req-accept"
+                                  onClick={() => handleAcceptRequest(request._id)}
+                                >
+                                  <CheckCircleIcon sx={{ fontSize: 18 }} />
+                                </button>
+                              </Tooltip>
+                              <Tooltip title="Reject" arrow>
+                                <button
+                                  className="sidebar-req-btn sidebar-req-reject"
+                                  onClick={() => handleRejectRequest(request._id)}
+                                >
+                                  <CancelIcon sx={{ fontSize: 18 }} />
+                                </button>
+                              </Tooltip>
+                            </div>
+                          )}
+                          {requestsTab !== 'pending' && (
+                            <div className="sidebar-request-status">
+                              {getStatusBadge(request.status)}
+                            </div>
+                          )}
+                        </div>
+                      ))
+                    )}
+                    {requests.length > 5 && (
+                      <button
+                        className="sidebar-see-all"
+                        onClick={() => navigate('/mentor-profile/requests')}
+                      >
+                        See all requests
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                  {/* 10. Connections Card */}
+                  <div className="profile-section-card sidebar-card">
                     <h3 className="sidebar-card-title">
                       <FaUserFriends />
                       Your Connections
@@ -1599,8 +1471,8 @@ const MentorProfile = () => {
                     )}
                   </div>
 
-                  {/* Suggested Mentors Card */}
-                  <div className="sidebar-card">
+                  {/* 11. Suggested Mentors Card */}
+                  <div className="profile-section-card sidebar-card">
                     <h3 className="sidebar-card-title">Suggested Mentors</h3>
                     {suggestedMentors.length === 0 ? (
                       <p className="sidebar-empty-text">No suggestions available</p>
@@ -1628,8 +1500,8 @@ const MentorProfile = () => {
                     )}
                   </div>
 
-                  {/* Upcoming Events Card */}
-                  <div className="sidebar-card">
+                  {/* 12. Upcoming Events Card */}
+                  <div className="profile-section-card sidebar-card">
                     <h3 className="sidebar-card-title">Upcoming Events</h3>
                     {upcomingEvents.length === 0 ? (
                       <p className="sidebar-empty-text">No upcoming events</p>
@@ -1658,10 +1530,12 @@ const MentorProfile = () => {
                       </div>
                     )}
                   </div>
+
                 </div>
-              </aside>
+              </div>
             )}
-          </div>{/* end profile-layout-grid */}
+            </div>
+          </div>
 
           <Footer />
         </main>
